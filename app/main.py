@@ -1,4 +1,9 @@
-import sys
+import sys,string
+
+builtins = set(['echo','exit','type'])
+
+def command_not_found(command: string):
+    print(command + ":","not found") 
 
 
 def main():
@@ -13,9 +18,14 @@ def main():
                 sys.exit(0)
             if command_parts[0] == 'echo':
                 print(" ".join(command_parts[1:]))
-
+            if command_parts[0] == 'type':
+                global builtins
+                if command_parts[1] in builtins:
+                    print(command_parts[1],'is a shell builtin')
+                else:
+                    command_not_found(command_parts[1])
         else:
-            print(command + ":","command not found") 
+            command_not_found(command)
 
 
 if __name__ == "__main__":
