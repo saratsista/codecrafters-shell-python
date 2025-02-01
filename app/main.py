@@ -11,8 +11,11 @@ def main():
         if len(command_parts) > 1:
             if command_parts[0] == 'exit' and command_parts[1] == '0':
                 sys.exit(0)
+            if command_parts[0] == 'echo':
+                print(" ".join(command_parts[1:]))
 
-        print(command + ":","command not found") 
+        else:
+            print(command + ":","command not found") 
 
 
 if __name__ == "__main__":
