@@ -41,11 +41,19 @@ def handle_executable(command, args):
 def handle_pwd(args):
     print(os.getcwd())
 
+def handle_cd(args):
+    try:
+        os.chdir(args[0])
+    except OSError:
+        print(f"cd: {args[0]}: No such file or directory")
+
+
 shell_builtins = {
     "echo": handle_echo,
     "exit": handle_exit,
     "type": handle_type,
-    "pwd": handle_pwd
+    "pwd": handle_pwd,
+    "cd": handle_cd
 }   
 
 def main():
