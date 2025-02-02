@@ -4,14 +4,26 @@ import random
 
 from typing import Optional
 
-shell_builtins = set(['echo','exit','type'])
-builtins = {}
-
 def command_not_found(command: string):
     print(command + ":","not found") 
 
-def is_executable(file_path: string):
-    return os.path.isfile(file_path) and os.access(file_path, os.X_OK)
+def handle_type(args):
+    global shell_builtins
+    if args[0] in shell_builtins:
+        print(args[0],'is a shell builtin')
+    elif exec := locate_executable(args[0]):
+        print(f"{args[0]} is {exec}")
+    else:
+        command_not_found(args[0])
+
+def handle_exit(args):
+    if args[0] == '0':
+        sys.exit(0)
+    else:
+        command_not_found('exit')
+
+def handle_echo(args):
+    print(" ".join(args))
 
 def locate_executable(command) -> Optional[string]:
     path_dirs = set(os.environ.get("PATH","").split(":"))
@@ -23,20 +35,18 @@ def locate_executable(command) -> Optional[string]:
     except FileNotFoundError:
         pass
 
-def handle_type(args):
-    global shell_builtins
-    if args[0] in shell_builtins:
-        print(args[0],'is a shell builtin')
-    elif exec := locate_executable(args[0]):
-        print(f"{args[0]} is {exec}")
-    else:
-        command_not_found(args[0])
-
 def handle_executable(command, args):
     subprocess.run([command, *args])
 
+def handle_pwd(args):
+    print(os.getcwd())
 
-    
+shell_builtins = {
+    "echo": handle_echo,
+    "exit": handle_exit,
+    "type": handle_type,
+    "pwd": handle_pwd
+}   
 
 def main():
     global shell_builtins
@@ -45,13 +55,9 @@ def main():
         sys.stdout.write("$ ")
         sys.stdout.flush()
         # Wait for user input
-        command, *args = input().split(" ")
-        if command == 'exit' and args[0] == '0':
-            sys.exit(0)
-        elif command == 'echo':
-            print(" ".join(args))
-        elif command == 'type':
-            handle_type(args)
+        command, *args = input().split()
+        if command in shell_builtins:
+            shell_builtins[command](args)
         # If command is part of the builtins, run it.
         elif executable := locate_executable(command):
             handle_executable(command, args)
