@@ -42,6 +42,7 @@ def handle_pwd(args):
     print(os.getcwd())
 
 def handle_cd(args):
+    # abs path
     try:
         os.chdir(args[0])
     except OSError:
