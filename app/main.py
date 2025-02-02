@@ -1,5 +1,8 @@
 import sys,string
-import os
+import os,subprocess
+import random
+
+from typing import Optional
 
 shell_builtins = set(['echo','exit','type'])
 builtins = {}
@@ -10,39 +13,48 @@ def command_not_found(command: string):
 def is_executable(file_path: string):
     return os.path.isfile(file_path) and os.access(file_path, os.X_OK)
 
-def load_execs_in_path_env():
-    global builtins
-    path_dirs = set(os.getenv("PATH").split(":"))
+def locate_executable(command) -> Optional[string]:
+    path_dirs = set(os.environ.get("PATH","").split(":"))
     try:
         for dir in path_dirs:
-            builtins.update({entry.name : entry.path for entry in os.scandir(dir) if is_executable(entry.path)})
-            #print(builtins)
+            file_path = os.path.join(dir,command)
+            if os.path.isfile(file_path) and os.access(file_path, os.X_OK):
+                return file_path
     except FileNotFoundError:
         pass
+
+def handle_type(args):
+    global shell_builtins
+    if args[0] in shell_builtins:
+        print(args[0],'is a shell builtin')
+    elif exec := locate_executable(args[0]):
+        print(f"{args[0]} is {exec}")
+    else:
+        command_not_found(args[0])
+
+def handle_executable(command, args):
+    subprocess.run([command, *args])
+
+
     
 
 def main():
-    # Uncomment this block to pass the first stage
-    global builtins, shell_builtins
+    global shell_builtins
+
     while True:
         sys.stdout.write("$ ")
-        # load all the executable files in path env.
-        load_execs_in_path_env()
+        sys.stdout.flush()
         # Wait for user input
-        command = input()
-        command_parts = command.split()
-        if len(command_parts) > 1:
-            if command_parts[0] == 'exit' and command_parts[1] == '0':
-                sys.exit(0)
-            if command_parts[0] == 'echo':
-                print(" ".join(command_parts[1:]))
-            if command_parts[0] == 'type':
-                if command_parts[1] in shell_builtins:
-                    print(command_parts[1],'is a shell builtin')
-                elif command_parts[1] in builtins:
-                    print(command_parts[1], 'is', builtins[command_parts[1]])
-                else:
-                    command_not_found(command_parts[1])
+        command, *args = input().split(" ")
+        if command == 'exit' and args[0] == '0':
+            sys.exit(0)
+        elif command == 'echo':
+            print(" ".join(args))
+        elif command == 'type':
+            handle_type(args)
+        # If command is part of the builtins, run it.
+        elif executable := locate_executable(command):
+            handle_executable(command, args)
         else:
             command_not_found(command)
 
