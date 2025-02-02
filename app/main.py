@@ -43,10 +43,11 @@ def handle_pwd(args):
 
 def handle_cd(args):
     # abs path
+    dir = os.getenv("HOME") if args[0] == '~' else args[0]
     try:
-        os.chdir(args[0])
+        os.chdir(dir)
     except OSError:
-        print(f"cd: {args[0]}: No such file or directory")
+        print(f"cd: {dir}: No such file or directory")
 
 
 shell_builtins = {
